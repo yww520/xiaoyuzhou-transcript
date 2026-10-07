@@ -221,6 +221,7 @@ def main():
         help=f"Obsidian 归档目录，默认: {DEFAULT_OBSIDIAN_DIR}",
     )
     ap.add_argument("--no-obsidian", action="store_true", help="不自动复制到 Obsidian 目录")
+    ap.add_argument("--keep-audio", action="store_true", help="保留原始音频文件不删除（默认自动清理以节省空间）")
     args = ap.parse_args()
 
     entries = parse_srt(Path(args.srt))
@@ -260,6 +261,16 @@ def main():
             obs_file = obs_dir / f"{date_prefix}-{safe_title}.md"
             obs_file.write_text(content, encoding="utf-8")
             print(f"🏠 已同步至 Obsidian Reading Hub: {obs_file}")
+
+    # 自动清理下载的音频文件（.m4a / .mp3）以释放磁盘存储
+    if not args.keep_audio:
+        meta_dir = Path(args.meta).parent
+        for af in list(meta_dir.glob("*.m4a")) + list(meta_dir.glob("*.mp3")):
+            try:
+                af.unlink()
+                print(f"🗑️ 已自动清理下载的音频文件: {af.name}")
+            except Exception as e:
+                print(f"⚠️ 清理音频文件失败 {af}: {e}", file=sys.stderr)
 
 
 if __name__ == "__main__":

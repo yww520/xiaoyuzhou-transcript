@@ -37,7 +37,7 @@ xyz-dl "<episode_url>" -o ./download
 - 用 `afinfo <file>.m4a` 验证音频完整（有 duration 和 bit rate）。
 - 若输出提示"数据来源: api"而非 "public-web"，说明网页解析失败回退到了登录接口，此时应停止并告知用户（免登录链路不可用）。
 
-## 阶段 2：转写
+## 阶段 2：转写与音频清理（强制要求）
 
 ```bash
 cd ~/.openclaw/data/xyz-dl-data/"download/<播客名>"
@@ -47,6 +47,13 @@ mlx_whisper "<标题>.m4a" \
 ```
 
 长音频放后台跑。产出 txt/srt/vtt/json/tsv 五个格式到 `transcript/`。
+
+> **⚠️ 核心要求（转录完成后必须删除音频）**：  
+> 转录成功生成字幕文件后，**必须立即删除下载的原始音频文件（`.m4a` / `.mp3`）**，释放磁盘空间，避免大体积音频占用本地存储：
+> ```bash
+> rm "<标题>.m4a"
+> ```
+> （注：阶段 3 的 `build_transcript_md.py` 脚本默认也会自动检测并清理下载目录下的音频源文件）。
 
 ## 阶段 3：章节排版与 Obsidian Frontmatter 注入
 

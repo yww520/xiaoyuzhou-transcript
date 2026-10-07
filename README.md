@@ -15,14 +15,14 @@
 - `<标题>.md` —— 按 shownotes 时间轴分章节的逐字稿，约90秒一段，段首带 `[mm:ss]` 时间戳
 - `<标题>-校对版.md` —— 去口语化重写版，所有英文/专业术语联网校对，文末附**术语校对记录表**和**口述数据勘误**
 - **Obsidian Reading Hub 自动入库**：自动同步至 `ai-workspace-hub/output/xiaoyuzhou/<date>-<标题>-校对版.md`，并在 Obsidian 阅读台首页以折叠卡片展示，支持划线、批注与 AI 总结
-- 中间产物：原始 m4a 音频、shownotes metadata（json/md）、srt/vtt/json/tsv 转写文件
+- 中间产物：shownotes metadata（json/md）、srt/vtt/json/tsv 转写文件（原始音频转写完成后自动删除以节省存储）
 
 ## 工作流程
 
 | 阶段 | 工具 | 说明 |
 | --- | --- | --- |
 | 1. 下载 | [xyz-dl](https://github.com/shiquda/xyz-dl) | 免登录抓取公开网页 `__NEXT_DATA__` 提取音频直链，不使用任何账号凭据，零风控风险 |
-| 2. 转写 | [mlx-whisper](https://github.com/ml-explore/mlx-examples)（large-v3-turbo） | Apple Silicon 本地硬件加速，15分钟音频约2分钟，46分钟音频约4分钟转完 |
+| 2. 转写与清理 | [mlx-whisper](https://github.com/ml-explore/mlx-examples)（large-v3-turbo） | Apple Silicon 本地硬件加速，15分钟音频约2分钟转完；生成字幕后自动清理原始大体积音频 |
 | 3. 排版 | `scripts/build_transcript_md.py` | 自动从 metadata 解析播出日期、时长、封面、单集链接并注入 Obsidian YAML Frontmatter，按时间轴切分段落 |
 | 4. 校对 | AI 助手 + 联网搜索 | 去口语化重写；术语逐条联网核实（修正 Whisper 对英文专名与技术词的误识别，如 CUDA、DeepSeek、Claude Code 等）；口述数据与公开报道不符的单独勘误 |
 | 5. 沉浸阅读 | [Obsidian Reading Hub](https://obsidian.md) | 自动落盘至 Obsidian「🎙️ 小宇宙转录稿」模块，支持选词高亮、想法批注、阅读状态流转及 AI 深度总结 |
