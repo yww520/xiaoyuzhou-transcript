@@ -153,14 +153,41 @@ def parse_meta(path: Path):
     # 简介：去掉首个 # 标题后的全部内容
     intro = text[title_m.end():].strip() if title_m else text.strip()
 
-    # 时间轴小节：找「时间轴」标题下 "* mm:ss 名称" 或 "- mm:ss 名称" 行
+    # 时间轴/时间线解析：支持「时间轴/时间线/Timeline」小节，兼容无 bullet、大章节前缀与多种时间格式
     chapters = []
-    tl_m = re.search(r"时间轴[^\n]*\n((?:[*\-]\s+.+\n?)+)", text)
-    if tl_m:
-        for line in tl_m.group(1).splitlines():
-            m = re.match(r"[*\-]\s+(\d{1,2}:\d{2}(?::\d{2})?)\s*(.*)", line.strip())
+    lines = text.splitlines()
+    in_timeline = False
+    curr_header = ""
+
+    for line in lines:
+        line_s = line.strip()
+        if re.search(r"(时间轴|时间线|Timeline)", line_s):
+            in_timeline = True
+            continue
+        if in_timeline:
+            # 遇到下一个主要元数据分节（如 ##、📅、🗒️ 等）则结束
+            if line_s.startswith("##") or line_s.startswith("📅") or line_s.startswith("🗒️"):
+                break
+            # 记录大章节标题（如：第一章｜招募...、尾声｜...）
+            if re.match(r"^(第[一二三四五六七八九十\d]+[章节部集卷篇]|尾声|前言|序言|开场)", line_s):
+                curr_header = line_s
+                continue
+            # 匹配带时间戳行（支持可选 bullet: * / -，以及 mm:ss 或 h:mm:ss）
+            m = re.match(r"^[*\-\s]*(\d{1,2}:\d{2}(?::\d{2})?)\s*(.*)", line_s)
             if m:
-                chapters.append((ts2sec(m.group(1)), m.group(2).strip()))
+                ts_str, name = m.group(1), m.group(2).strip()
+                full_name = f"{curr_header} · {name}" if curr_header else name
+                chapters.append((ts2sec(ts_str), full_name))
+
+    # 兜底：若上述逻辑未找到时间轴，尝试原先的正则匹配
+    if not chapters:
+        tl_m = re.search(r"(?:时间轴|时间线)[^\n]*\n((?:[*\-]\s+.+\n?)+)", text)
+        if tl_m:
+            for line in tl_m.group(1).splitlines():
+                m = re.match(r"[*\-]\s+(\d{1,2}:\d{2}(?::\d{2})?)\s*(.*)", line.strip())
+                if m:
+                    chapters.append((ts2sec(m.group(1)), m.group(2).strip()))
+
     chapters.sort(key=lambda c: c[0])
     if not chapters or chapters[0][0] > 0:
         chapters.insert(0, (0, "开场"))
