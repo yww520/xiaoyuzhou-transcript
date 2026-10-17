@@ -83,7 +83,7 @@ python3 ~/.agents/skills/xiaoyuzhou-transcript/scripts/build_transcript_md.py \
   ---
   ```
 - 脚本自动从 metadata 的「时间轴」小节解析章节，约90秒一段、段首带 `[mm:ss]`。
-- 脚本会自动将初步逐字稿同步一份到 `/Users/clawbot/AI/skywork/ai-workspace-hub/output/xiaoyuzhou/<date>-<标题>.md`。
+- 阶段 3 产出的初步逐字稿默认仅保存在本地工作目录 `transcript/<标题>.md`，**默认不同步到 Obsidian**，以彻底避免与后续阶段 4 的最终校对版并存导致 Reading Hub 看板出现两张重复卡片。
 
 ## 阶段 4：去口语化 + 术语校对（核心增值步骤，不可跳过）
 
@@ -94,9 +94,10 @@ python3 ~/.agents/skills/xiaoyuzhou-transcript/scripts/build_transcript_md.py \
 3. **结构**：头部保留 YAML Frontmatter（`read_status: "未读"`）→ 一级标题 → 简介（沿用 shownotes，术语表按校对结果修正扩充）→ 正文按章节 → 文末固定两个附录：
    - **术语校对记录表**：| 转写原文 | 校对后 | 说明 |
    - **数据勘误**：主播口述数字与公开报道不一致的，保留口述、标注实际数据和来源。
-4. **保存到 Obsidian Reading Hub**：
+4. **保存到 Obsidian Reading Hub（唯一入库版本）**：
    将最终成果保存为：
    `/Users/clawbot/AI/skywork/ai-workspace-hub/output/xiaoyuzhou/<date>-<标题>-校对版.md`
+   （**注意**：Obsidian 目录中每期播客必须且仅能保留一份 `-校对版.md` 文件。若此前有同名未校对草稿，必须自动清理，严禁同时留存双份）。
 
 ## 阶段 5：在 Obsidian Reading Hub 中阅读
 

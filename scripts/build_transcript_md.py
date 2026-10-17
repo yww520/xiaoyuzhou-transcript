@@ -244,10 +244,10 @@ def main():
     ap.add_argument("--para-gap", type=int, default=90, help="每段最长秒数，默认90")
     ap.add_argument(
         "--obsidian-dir",
-        default=str(DEFAULT_OBSIDIAN_DIR),
-        help=f"Obsidian 归档目录，默认: {DEFAULT_OBSIDIAN_DIR}",
+        default=None,
+        help="Obsidian 归档目录。默认不自动推送初步未校对稿，避免与阶段4最终校对版在 Reading Hub 出现重复卡片",
     )
-    ap.add_argument("--no-obsidian", action="store_true", help="不自动复制到 Obsidian 目录")
+    ap.add_argument("--sync-obsidian", action="store_true", help="强制将初步未校对稿同步至 Obsidian 目录")
     ap.add_argument("--keep-audio", action="store_true", help="保留原始音频文件不删除（默认自动清理以节省空间）")
     args = ap.parse_args()
 
@@ -280,14 +280,14 @@ def main():
     out_path.write_text(content, encoding="utf-8")
     print(f"✅ 生成逐字稿: {out_path} ({out_path.stat().st_size // 1024} KB, {len(entries)} 条字幕, {len(chapters)} 个章节)")
 
-    if not args.no_obsidian and args.obsidian_dir:
-        obs_dir = Path(args.obsidian_dir)
-        if obs_dir.exists():
-            safe_title = re.sub(r'[\\/*?:"<>|]', "-", title).strip()
-            date_prefix = meta_dict.get("date", datetime.date.today().strftime("%Y-%m-%d"))
-            obs_file = obs_dir / f"{date_prefix}-{safe_title}.md"
-            obs_file.write_text(content, encoding="utf-8")
-            print(f"🏠 已同步至 Obsidian Reading Hub: {obs_file}")
+    # 仅当显式指定 --obsidian-dir 或 --sync-obsidian 时才推送初稿至 Obsidian
+    target_obs_dir = Path(args.obsidian_dir) if args.obsidian_dir else (DEFAULT_OBSIDIAN_DIR if args.sync_obsidian else None)
+    if target_obs_dir and target_obs_dir.exists():
+        safe_title = re.sub(r'[\\/*?:"<>|]', "-", title).strip()
+        date_prefix = meta_dict.get("date", datetime.date.today().strftime("%Y-%m-%d"))
+        obs_file = target_obs_dir / f"{date_prefix}-{safe_title}.md"
+        obs_file.write_text(content, encoding="utf-8")
+        print(f"🏠 已同步至 Obsidian Reading Hub: {obs_file}")
 
     # 自动清理下载的音频文件（.m4a / .mp3）以释放磁盘存储
     if not args.keep_audio:
